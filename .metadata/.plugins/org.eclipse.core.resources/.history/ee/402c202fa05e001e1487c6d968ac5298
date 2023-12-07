@@ -1,0 +1,298 @@
+package com.xyram.daydrop.daoimpl;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
+import javax.transaction.Transactional;
+
+import org.hibernate.query.Query;
+import org.springframework.stereotype.Repository;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.xyram.daydrop.dao.AbstractDao;
+import com.xyram.daydrop.dao.CustomerOrderDao;
+import com.xyram.daydrop.dao.CustomerOrderReplicaDoa;
+import com.xyram.daydrop.model.CustomerOrder;
+import com.xyram.daydrop.model.CustomerOrderReplica;
+import com.xyram.daydrop.model.CustomerPackingWalletTrancation;
+import com.xyram.daydrop.model.Customers;
+import com.xyram.daydrop.model.Schedule;
+
+@Repository
+public class CustomerOrderReplicaDoaImpl extends AbstractDao implements CustomerOrderReplicaDoa {
+
+	@Override
+	@Transactional
+	public CustomerOrderReplica updateCustomer(CustomerOrderReplica customerOrderReplica) {
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		Customers customers = null;
+
+		try {
+			getSession().saveOrUpdate(customerOrderReplica);
+
+			return customerOrderReplica;
+
+		} catch (Exception e) {
+			throw e;
+		}
+	}
+
+	@Override
+	@Transactional
+	public List<CustomerOrderReplica> getAllcustomerOrderReplica(String searchQuery, String statusType,
+			String schedule) {
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		Customers customers = null;
+		String query = null;
+		try {
+
+			query = "select c from CustomerOrderReplica c left join Apartments a on c.apartmentId=a.aId  where c.id is not null  ";
+
+			if (searchQuery != null) {
+
+				query += " AND  ((lower(str(a.apartmentName)) Like :searchQuery)  "
+						+ "OR ( lower(c.contactNumber) LIKE :searchQuery)"
+						+ " OR  ( lower(c.statusType) LIKE :searchQuery) ) ";
+			}
+
+			if (statusType != null) {
+				query += " AND lower(c.statusType) = '" + statusType + "'";
+			}
+
+			if (schedule != null) {
+				query += " AND lower(c.schedule) = '" + schedule + "'";
+			}
+
+			query += " order by  c.statusType,c.ordered ";
+
+			Query customerOrderReplicasQuery = getSession().createQuery(query);
+
+			if (searchQuery != null) {
+				customerOrderReplicasQuery.setString("searchQuery", '%' + searchQuery + '%');
+
+			}
+			List<CustomerOrderReplica> customerOrderReplicas = (List<CustomerOrderReplica>) customerOrderReplicasQuery
+					.getResultList();
+
+			return customerOrderReplicas;
+
+		} catch (Exception e) {
+			throw e;
+		}
+	}
+
+	@Override
+	@Transactional
+	public List<CustomerOrderReplica> getAllcustomerOrderReplicaBySchdeule(String statusType, String schedule) {
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		Customers customers = null;
+		String query = null;
+		try {
+
+//			query = "select * from customer_order_replica c  "
+//					+ " where c.id is not null and c.razor_pay_order_id is not null and lower(c.status_type)!='success'  "
+//					+ " and c.last_updated_ts <=(now() - interval '1 MINUTE') and c.check_with_razorpay = false  ";
+			
+			query = "select * from customer_order_replica c  "
+					+ " where c.id is not null and c.razor_pay_order_id is not null and lower(c.status_type)!='success'  "
+					+ "  and (c.check_with_razorpay = false or ordered = false) ";
+
+			if (schedule != null) {
+				query += " AND lower(c.schedule) = '" + schedule + "'";
+			}
+
+			query += " order by  c.status_type,c.ordered ";
+
+			Query customerOrderReplicasQuery = getSession().createNativeQuery(query, CustomerOrderReplica.class);
+
+			List<CustomerOrderReplica> customerOrderReplicas = (List<CustomerOrderReplica>) customerOrderReplicasQuery
+					.getResultList();
+
+			return customerOrderReplicas;
+
+		} catch (Exception e) {
+			throw e;
+		}
+	}
+
+	@Override
+	@Transactional
+	public int updateCustomerOrderSatus(String contactNumber, Integer apartmentId, boolean ordered) {
+
+		try {
+			Query<CustomerOrderReplica> updateQuery = getSession().createQuery(
+					"update CustomerOrderReplica  c set c.ordered=:ordered ,c.statusType=:statusType where c.contactNumber=:contactNumber and "
+							+ "c.apartmentId=:apartmentId ");
+			updateQuery.setParameter("contactNumber", contactNumber);
+			updateQuery.setParameter("apartmentId", apartmentId);
+			updateQuery.setParameter("ordered", ordered);
+			updateQuery.setParameter("statusType", "success");
+
+			int updated = updateQuery.executeUpdate();
+			return updated;
+
+		} catch (Exception e) {
+
+			return 0;
+		}
+
+	}
+
+	@Override
+	@Transactional
+	public int updateCustomerOrderReplicaStatus(String contactNumber, String cartId, String status, boolean ordered) {
+
+		try {
+			Query<CustomerOrderReplica> updateQuery = getSession()
+					.createQuery("update CustomerOrderReplica  c set c.ordered=:ordered ,c.statusType=:statusType"
+							+ ",c.lastUpdatedTimestamp=:lastUpdatedTimestamp "
+							+ " where c.contactNumber=:contactNumber  and c.cartId=:cartId ");
+			updateQuery.setParameter("contactNumber", contactNumber);
+			updateQuery.setParameter("cartId", cartId);
+			updateQuery.setParameter("ordered", ordered);
+			updateQuery.setParameter("statusType", status);
+			updateQuery.setParameter("lastUpdatedTimestamp", new Date());
+
+			int updated = updateQuery.executeUpdate();
+			return updated;
+
+		} catch (Exception e) {
+
+			return 0;
+		}
+
+	}
+
+	@Override
+	@Transactional
+	public int updateCustomerOrderStatus(String contactNumber, String cartId, boolean ordered,Integer orderId) {
+
+		try {
+			Query<CustomerOrderReplica> updateQuery = getSession().createQuery(
+					"update CustomerOrderReplica  c set c.ordered=:ordered ,c.statusType=:statusType,c.orderId=:orderId,c.checkWithRazorpay=true where c.contactNumber=:contactNumber and "
+							+ "c.cartId=:cartId ");
+			updateQuery.setParameter("contactNumber", contactNumber);
+			updateQuery.setParameter("cartId", cartId);
+			updateQuery.setParameter("ordered", ordered);
+			updateQuery.setParameter("statusType", "Success");
+			updateQuery.setParameter("orderId",orderId);
+
+			int updated = updateQuery.executeUpdate();
+
+			return updated;
+
+		} catch (Exception e) {
+
+			return 0;
+		}
+	}
+
+	@Override
+	@Transactional
+	public CustomerOrderReplica getCustomerOrderByCartId(String cartId, String contactNumber) {
+
+		try {
+			Query<CustomerOrderReplica> customerOrderReplicaQuery = getSession().createQuery(
+					"select c from  CustomerOrderReplica c where c.cartId=:cartId and c.contactNumber=:contactNumber");
+			customerOrderReplicaQuery.setParameter("cartId", cartId);
+			customerOrderReplicaQuery.setParameter("contactNumber", contactNumber);
+			CustomerOrderReplica customerOrderReplica = customerOrderReplicaQuery.uniqueResult();
+
+			return customerOrderReplica;
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	@Override
+	@Transactional
+	public long getRazorPayExistByCartId(String razorPayOrderId) {
+
+		try {
+			long count = 0;
+			Query<Long> customerOrderReplicaQuery = getSession().createQuery(
+					"select count(c.id) from  CustomerOrderReplica c where " + " c.razorPayOrderId=:razorPayOrderId");
+
+			customerOrderReplicaQuery.setParameter("razorPayOrderId", razorPayOrderId);
+			count = customerOrderReplicaQuery.uniqueResult();
+
+			return count;
+		} catch (Exception e) {
+			return 0;
+		}
+	}
+
+	@Override
+	public CustomerOrderReplica getLastOrderPendingStatus(String scheduleId, String customerNumber) {
+		// TODO Auto-generated method stub
+		ObjectMapper objectMapper = new ObjectMapper();
+		Customers customers = null;
+		String query = null;
+		try {
+
+			query = "select c from customer_order_replica c  "
+					+ " where c.id is not null and c.razor_pay_order_id is not null and lower(c.status_type)!='success' and c.contact_number= '"
+					+ customerNumber + "'  " + " and c.ordered=false ";
+
+			if (scheduleId != null) {
+				query += " AND lower(c.schedule) = '" + scheduleId + "'";
+			}
+
+			query += " order by  c.status_type,c.ordered ";
+
+			Query<CustomerOrderReplica> customerOrderReplicasQuery = getSession().createNativeQuery(query, CustomerOrderReplica.class);
+
+		
+			return customerOrderReplicasQuery.uniqueResult();
+
+		} catch (Exception e) {
+			throw e;
+		}
+	}
+	
+	
+	@Override
+    @Transactional
+    public int updateCheckRezorpayStatus(CustomerOrderReplica status) {
+        try {
+            Query<CustomerOrderReplica> updateQuery = getSession().createQuery(
+                    "update CustomerOrderReplica  c set c.checkWithRazorpay=:checkWithRazorPay where c.contactNumber=:contactNumber and "
+                            + "c.cartId=:cartId ");
+            updateQuery.setParameter("contactNumber", status.getContactNumber());
+            updateQuery.setParameter("cartId", status.getCartId());
+            updateQuery.setParameter("checkWithRazorPay", status.isCheckWithRazorpay());
+//            updateQuery.setParameter("ordered", ordered);
+//            updateQuery.setParameter("statusType", "Success");
+            
+            int updated = updateQuery.executeUpdate();
+            
+            return updated;
+
+
+
+       } catch (Exception e) {
+        
+            return 0;
+        }
+    }
+
+	@Override
+	public List<CustomerOrder> getListCustomerOrderByCustomerId(Integer ctId, Integer sId) {
+	    String hql = "FROM CustomerOrder co WHERE co.customers.ctId = :customerId AND co.schedule.sId = :scheduleId " +
+	                 "AND co.orderStatus IN ('PACKED', 'INITIATED')"+"AND co.orderStatus != 'CANCELLED'";
+	    Query<CustomerOrder> query = getSession().createQuery(hql, CustomerOrder.class);
+	    query.setParameter("customerId", ctId);
+	    query.setParameter("scheduleId", sId);
+	    List<CustomerOrder> customerOrders = query.list();
+
+	    return customerOrders;
+	}
+
+
+
+
+}

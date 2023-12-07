@@ -1,0 +1,352 @@
+package com.xyram.daydrop.serviceimpl;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.json.JSONArray;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.xyram.daydrop.dao.ApartmentProdDao;
+import com.xyram.daydrop.dao.CatagoryDao;
+import com.xyram.daydrop.dao.ProductDao;
+import com.xyram.daydrop.enumtypes.UserStatus;
+import com.xyram.daydrop.images.S3BucketStorageServiceImpl;
+import com.xyram.daydrop.model.ApartmentProducts;
+import com.xyram.daydrop.model.Apartments;
+import com.xyram.daydrop.model.Category;
+import com.xyram.daydrop.model.Product;
+import com.xyram.daydrop.model.Schedule;
+
+import com.xyram.daydrop.response.CategoryProductReponse;
+import com.xyram.daydrop.service.CatagoryService;
+
+import javassist.bytecode.stackmap.BasicBlock.Catch;
+
+/**
+ * 
+ * @author sahana.neelappa
+ *
+ */
+@Service
+public class CatagoryServiceImpl implements CatagoryService {
+
+	@Autowired
+	CatagoryDao catagoryDao;
+
+	@Autowired
+	ProductDao productDao;
+
+	@Autowired
+	ApartmentProdDao apartmentdao;
+
+	@Value("${file-key}")
+	private String keyName;
+
+	@Value("${application.bucket.name}")
+	private String bucketname;
+
+	@Autowired(required = true)
+	S3BucketStorageServiceImpl s3BucketStorageService;
+
+	@Override
+	public List<Category> getAllCatagory() {
+
+		return catagoryDao.getAllCatagory();
+	}
+
+	@Override
+	public String updateCategoryStatus(int catagoryId, UserStatus userstatus) {
+
+		List<Product> productList = productDao.getProductsByCategoryId(catagoryId);
+
+		if (productList.size() > 0) {
+
+			return productDao.updateCategoryProductStatus(catagoryId, userstatus);
+		} else {
+			return catagoryDao.updateCategoryStatus(catagoryId, userstatus);
+		}
+
+	}
+
+//	@Override
+//	public String updateCategoryStatus(int catagoryId, UserStatus userstatus) {
+//		if (userstatus.equals(UserStatus.INACTIVE)) {
+//
+//			List<Product> productList = productDao.getProductsByCategoryId(catagoryId);
+//
+//			productDao.updateProductStatus(productNew.getpId(), UserStatus.INACTIVE);
+//		}
+//		return catagoryDao.updateCategoryStatus(catagoryId, userstatus);
+//	}else
+//
+//	{
+//		return catagoryDao.updateCategoryStatus(catagoryId, userstatus);
+//	}
+//	}
+
+	@Override
+	public List<Category> getAllCatagoryActive() {
+
+		return catagoryDao.getAllCatagoryActive();
+	}
+
+	@Override
+	public Category editCategory(Category category) {
+
+		return catagoryDao.editCategory(category);
+	}
+
+	@Override
+	public Category addCategory(Map<Object, Object> category) {
+		return catagoryDao.addCategory(category);
+	}
+
+	@Override
+	public List<CategoryProductReponse> getAllCatagorybyApartmentId(int aId, Map request) {
+		Map response = new HashMap();
+
+		String product = null;
+		String category = null;
+		Map filters = request.containsKey("filters") ? (Map) request.get("filters") : null;
+		if (filters != null) {
+			if (filters.containsKey("product"))
+				product = (String) filters.get("product");
+			if (filters.containsKey("category"))
+				category = (String) filters.get("category");
+		}
+
+		List<CategoryProductReponse> categoryProductList = new ArrayList<CategoryProductReponse>();
+		List<Category> categoryList = catagoryDao.getAllCatagoryList();
+		for (Category catagoryObj : categoryList) {
+			List<Map> productList = catagoryDao.getAllCatagorybyApartmentId(aId, catagoryObj.getcId(), product,
+					category);
+			if (productList.size() > 0)
+				if (productList.get(0).get("unitsPrice") != null) {
+					CategoryProductReponse categoryProduct = new CategoryProductReponse();
+					categoryProduct.setCid(catagoryObj.getcId());
+					categoryProduct.setCategoryName(catagoryObj.getcategoryName());
+					categoryProduct.setImage(catagoryObj.getImage());
+					categoryProduct
+							.setStatus(catagoryObj.getStatus() != null ? catagoryObj.getStatus().toString() : null);
+					categoryProduct.setProducts(productList);
+					categoryProductList.add(categoryProduct);
+				}
+
+		}
+		return categoryProductList;
+	}
+
+	@Override
+	public List<CategoryProductReponse> getAllCatagoryListbyApartmentId(int aId, Map request) {
+		Map response = new HashMap();
+
+		String product = null;
+		String category = null;
+		Map filters = request.containsKey("filters") ? (Map) request.get("filters") : null;
+		if (filters != null) {
+			if (filters.containsKey("product"))
+				product = (String) filters.get("product");
+			if (filters.containsKey("category"))
+				category = (String) filters.get("category");
+		}
+
+		List<CategoryProductReponse> categoryProductList = new ArrayList<CategoryProductReponse>();
+		List<Category> categoryList = catagoryDao.getAllCatagoryList();
+		for (Category catagoryObj : categoryList) {
+			List<Map> productList = catagoryDao.getAllCatagorybyApartmentId(aId, catagoryObj.getcId(), product,
+					category);
+			if (productList.size() > 0) {
+
+				CategoryProductReponse categoryProduct = new CategoryProductReponse();
+				categoryProduct.setCid(catagoryObj.getcId());
+				categoryProduct.setCategoryName(catagoryObj.getcategoryName());
+				categoryProduct.setImage(catagoryObj.getImage());
+				categoryProduct.setStatus(catagoryObj.getStatus() != null ? catagoryObj.getStatus().toString() : null);
+
+				categoryProduct.setProducts(productList);
+				categoryProductList.add(categoryProduct);
+
+			}
+
+		}
+		return categoryProductList;
+	}
+
+	@Override
+	public List<Map> getAllApartmentProductListbyId(int aId, Map request) {
+		Map response = new HashMap();
+
+		String product = null;
+		String category = null;
+		Map filters = request.containsKey("filters") ? (Map) request.get("filters") : null;
+		if (filters != null) {
+			if (filters.containsKey("product"))
+				product = (String) filters.get("product");
+			if (filters.containsKey("category"))
+				category = (String) filters.get("category");
+		}
+
+		List<Map> apartmentProductList = catagoryDao.getAllApartmentProductsById(aId, product);
+
+		return apartmentProductList;
+	}
+
+	@Override
+	public List<Map> searchAllApartmentProductListbyId(int aId, String product) {
+		Map response = new HashMap();
+
+		List<Map> apartmentProductList = catagoryDao.searchAllApartmentProductsById(aId, product.toLowerCase());
+
+		return apartmentProductList;
+	}
+
+	@Override
+	public List<Map> getAllApartmentProductCountByCategory(int aId) {
+		Map response = new HashMap();
+
+		List<Map> apartmentProductCount = catagoryDao.getAllProductCountByCategory(aId);
+
+		return apartmentProductCount;
+	}
+
+	@Override
+	public Map<String, Object> UpdateOrderOfCategory(int cid, int order) {
+		Map response = new HashMap();
+		Category OrderOfCategory = catagoryDao.updateOrderOfCategory(cid, order);
+		response.put("OrderOfCategory", OrderOfCategory);
+		return response;
+
+	}
+
+	@Override
+	public Category addCategoryAndFile(MultipartFile file, String categorydetails)
+			throws JsonMappingException, JsonProcessingException {
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		Map<Object, Object> categoryDetailsMap = objectMapper.readValue(categorydetails,
+				new TypeReference<Map<Object, Object>>() {
+				});
+
+		if (categoryDetailsMap == null) {
+			throw new NullPointerException("Category Details is Empty");
+		}
+		if (file != null && file.getContentType() != null) {
+			String fileNames = file.getOriginalFilename();
+			String[] allowedFileFormats = { "jpg", "jpeg", "png" };
+			String fileExtension = fileNames.substring(fileNames.lastIndexOf(".") + 1).toLowerCase();
+			boolean isValidFileFormat = Arrays.stream(allowedFileFormats)
+					.anyMatch(format -> format.equals(fileExtension));
+			if (!isValidFileFormat) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+						"Invalid file format. Only (JPG,JPEG,PNG) allowed.");
+			}
+		}
+		Category category = catagoryDao.addCategory(categoryDetailsMap);
+
+		if (file != null && file.getContentType() != null) {
+			String filename = category.getcategoryName()
+					+ file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
+			String key = keyName + filename;
+
+			try {
+				if (s3BucketStorageService.uploadFile(file, key) != null) {
+					category.setImage(filename);
+					catagoryDao.editCategory(category);
+					return category;
+
+				} else {
+					throw new ResponseStatusException(HttpStatus.OK,
+							"Category added successfully, but image did not upload");
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			return category;
+
+		}
+		return category;
+	}
+
+	@Override
+	public Map<String, Object> addFileByCategoryId(MultipartFile file, Integer catagoryId, String categorydetails)
+			throws JsonMappingException, JsonProcessingException {
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		Category categoryDetailsMap = objectMapper.readValue(categorydetails, Category.class);
+
+		if (categoryDetailsMap == null) {
+			throw new NullPointerException("Category Details is Empty");
+		}
+
+		Map<String, Object> result = new HashMap<>();
+
+		Category category = catagoryDao.getCategoryById(catagoryId);
+
+		if (category == null) {
+			result.put("success", false);
+			result.put("message", "Category not found for the given CategoryID");
+			return result;
+		}
+
+		category.setcategoryName(categoryDetailsMap.getcategoryName());
+		catagoryDao.editCategory(category);
+		if (file != null) {
+			String fileNames = file.getOriginalFilename();
+			// Validate file format
+			String[] allowedFileFormats = { "jpg", "jpeg", "png" };
+			String fileExtension = fileNames.substring(fileNames.lastIndexOf(".") + 1).toLowerCase();
+			boolean isValidFileFormat = Arrays.stream(allowedFileFormats)
+					.anyMatch(format -> format.equals(fileExtension));
+
+			if (!isValidFileFormat) {
+				result.put("success", false);
+				result.put("message", "Invalid file format. Only (JPG, JPEG, PNG) allowed.");
+				return result;
+			}
+			String filename = category.getcategoryName()
+					+ file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
+			category.setImage(filename);
+			String key = keyName + filename;
+			try {
+				if (s3BucketStorageService.uploadFile(file, key) != null) {
+					catagoryDao.editCategory(category);
+					result.put("categoryName", categoryDetailsMap.getcategoryName());
+					result.put("success", true);
+					result.put("message", "File and categoryName added successfully for Category ID: " + catagoryId);
+				} else {
+					result.put("success", false);
+					result.put("message", "Failed to upload file");
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		} else {
+//			catagoryDao.editCategory(category);
+			result.put("categoryName", categoryDetailsMap.getcategoryName());
+			result.put("success", true);
+			result.put("message", "Category details updated");
+		}
+
+		return result;
+	}
+
+}

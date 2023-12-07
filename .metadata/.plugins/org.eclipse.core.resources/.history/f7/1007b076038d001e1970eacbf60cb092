@@ -1,0 +1,157 @@
+jdbc.driverClassName=org.postgresql.Driver
+
+#enable sms flag
+isSmsRequired: false
+
+#Enable scheduler  flag
+isSchedulerRequired : true
+spring.profiles.active=default
+#jdbc.url=jdbc:postgresql://localhost:5432/daydrop-local
+#jdbc.username=postgres
+#jdbc.password=postgres
+
+# Database connection 
+
+#prod old
+#jdbc.url=jdbc:postgresql://13.233.128.43:5432/daydrop
+#jdbc.username=postgres
+#jdbc.password=y4Rm=76xTXK6_M2j
+
+
+
+#production
+#jdbc.url=jdbc:postgresql://43.205.28.43:5432/daydrop
+#jdbc.username=postgres
+#jdbc.password=y4Rm=76xTXK6_M2j
+#customer_application_url : https://shop.mydaydrop.com?id=
+#application_url : https://admin.mydaydrop.com:444/daydrop
+#application.bucket.name = daydrop-uat-s3-bucket
+#customer_application_url : https://mydaydrop.com?id=
+
+
+
+#production_test
+#jdbc.url=jdbc:postgresql://43.205.28.43:5432/daydrop_test
+#jdbc.username=postgres
+#jdbc.password=y4Rm=76xTXK6_M2j
+#customer_application_url : https://shop.mydaydrop.com?id=
+#application_url : https://admin.mydaydrop.com:444/daydrop
+#customer_application_url : https://mydaydrop.com?id=
+
+
+
+
+#test database
+#jdbc.url=jdbc:postgresql://43.205.37.243:5432/daydrop
+#jdbc.username=postgres
+#jdbc.password=y4Rm=76xTXK6_M2j
+#customer_application_url : https://daydroptest.xyramsoft.com?id=
+
+
+#UAT 
+#jdbc.url=jdbc:postgresql://3.111.99.174:5432/daydrop
+#jdbc.username=postgres
+#jdbc.password=y4Rm=76xTXK6_M2j
+#customer_application_url : https://uat.mydaydrop.com?id=
+#application_url : https://uat-admin.mydaydrop.com:444/daydrop
+application.bucket.name : daydrop-uat-s3-bucket
+
+
+#Localhost
+jdbc.url=jdbc:postgresql://localhost:5432/daydroplocalnew
+jdbc.username=postgres
+jdbc.password=root
+customer_application_url : https://uat.mydaydrop.com?id=
+
+
+
+
+#hibernate configuration
+hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+hibernate.show_sql=true
+hibernate.format_sql=false
+hibernate.hbm2ddl.auto=update
+spring.datasource.initialization-mode=always
+
+#server port no
+server.port=8089	
+
+#error
+server.error.include-message=always
+
+#file upload  properties
+spring.servlet.multipart.max-file-size=50MB
+spring.servlet.multipart.max-request-size=50MB
+
+#server-auth-key: /String SFTPKEY = /home/ubuntu/tomcat-admin/webapps/daydrop/WEB-INF/classes/daydropdev.ppk
+#server-auth-key:  /String SFTPKEY = /home/ubuntu/tomcat-admin/webapps/daydrop/WEB-INF/classes/daydrop-test.ppk
+server-auth-key: daydrop-test.ppk
+
+#file storage
+image-base-url: /images/daydrop-images
+application-logo-name: Logo
+#sftp.host: 52.66.204.180
+#sftp.port: 22
+#sftp.username: ubuntu
+#sftp.password: bhargav@456
+#sftp.sessionTimeout: 15000
+#sftp.channelTimeout: 15000
+
+#auth type ppk | password
+isKeyAuthRequired: true
+isPasswordRequired: false
+
+ #  prod server file storage
+sftp.host: 43.205.28.43
+sftp.port: 22
+sftp.username: ubuntu
+sftp.password: bhargav@456
+sftp.sessionTimeout: 15000
+sftp.channelTimeout: 15000
+
+
+ #  uat server file storage
+#sftp.host: 3.111.99.174
+#sftp.port: 22
+#sftp.username: ubuntu
+#sftp.password: bhargav@456
+#sftp.sessionTimeout: 15000
+#sftp.channelTimeout: 15000
+
+
+sftp.privatekey: /home/ubuntu/tomcat-admin/webapps/daydrop/WEB-INF/classes/daydrop-test.ppk
+
+jwt.secret=7GX#wEk_8F@?EiY-@?e?h!U@WS:ijW
+ExpiryTimeForLoginOtp=600
+authKeySms=D!~7626D24GZadLzh
+sidForSms=DAYDRP
+swagger.enabled=true
+
+#PHONEPAY UAT
+#merchant_id : PGTESTPAYUAT
+#salt_key : 099eb0cd-02cf-4e2a-8aca-3e6c6aff0399
+#salt_index : 1
+#pay_api : https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay
+#status_check_api : https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status/
+
+
+#PHONEPAY PRODUCTION
+merchant_id : DAYDROPONLINE
+salt_key : e9e46fa7-436e-4538-895b-75098d56500d
+salt_index : 1
+pay_api : https://api.phonepe.com/apis/hermes/pg/v1/pay
+status_check_api : https://api.phonepe.com/apis/hermes/pg/v1/status/
+
+onlinePaymentType : PhonePe
+#onlinePaymentType : Razorpay
+
+delivery_charges_applicable : false
+
+
+file-key : images/
+
+#aws.accessKey= AKIA3H2RGN3BKRZBTGOM
+#aws.secretKey=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
+
+cloud.aws.region.use-default-aws-region-chain:true
+cloud.aws.stack.auto:false

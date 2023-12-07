@@ -1,0 +1,68 @@
+package com.xyram.daydrop.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import com.xyram.daydrop.model.CustomerOrder;
+import com.xyram.daydrop.model.Customers;
+import com.xyram.daydrop.model.Quantity;
+
+public interface CustomerDetailsDao {
+
+	public Map mobileNumberExists(String contactNumber, Integer aId);
+
+	public Customers addNewCustomer(Map customerDetail, int aId);
+
+	public List<CustomerOrder> customerDetailspacked(Integer integer);
+
+	public List<CustomerOrder> customerDetailsunpacked(Integer integer);
+
+	public Map customerDetailsCountpacked();
+
+	public Customers getByCustomerId(Integer ctid);
+
+	public void updateCustomerBalance(String string, double walletBalance);
+
+	void updateCustomerBalance(String contactNumber, int walletBalance);
+
+
+
+	public Map addMoney(int customerId, int walletBalance);
+
+	List<Quantity> customerDetails(Integer oId);
+
+	public Map contactNumberDetails(String contactNumber, Integer aId);
+	
+	public List<CustomerOrder> customerDetailspackedOrunPacked(Integer oId);
+
+
+	void updateTrancationOutCustomerBalance(String contactNumber, Integer walletBalance);
+
+	void updateTrancationINCustomerBalance(String contactNumber, Integer walletBalance);
+
+	Map getWalletBalance(String mobileNumber, Integer aId);
+
+	Customers getByContactNumber(String contactNumber, Integer aId);
+
+	Customers getByContactNumber(String contactNumber);
+
+	Customers updateCustomer(Customers customer);
+
+	Customers getByContactNoAndApartment(String contactNumber, Integer aId);
+
+	Map getWalletBalanceDetails(String mobileNumber);
+
+	void updateCustomerWalletBalance(String contactNumber, Integer walletBalance);
+
+
+	List<Customers> getAllConsumerList();
+
+	Customers updateCustomerDeatils(Customers customer);
+
+	int updateTrancationINBalance(String contactNumber, Integer walletBalance);
+
+	public Map getInvoiceDetails(Integer orderId);
+	Map getByContactNumberAndApartment(String contactNumber, Integer aId);
+
+
+}
